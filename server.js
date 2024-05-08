@@ -90,8 +90,14 @@ app.post('/api/setupdates', async (req, res) => {
       let rowCount = Object.keys(query.records).length
     
       for (let i = 0; i < rowCount; i++ ){
-        cerRec = query.records[i].id
-        
+        let curId = query.records[i]
+        let curRec = await mailAction.findById(curId).exec()
+        if (curRec != null) {
+          curRec.isSync = true
+          curRec.dateSync = new Date()
+          await curRec.save()
+        }
+         
       }
       
       res.status(200).send()  
