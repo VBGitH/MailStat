@@ -18,6 +18,7 @@ const mailAction = mongoose.model('mailAction', {
 app.use('/', express.static('public'))
 
 //http://localhost:3030/api/mail/open?LidGuid=123&LetterGuid=321
+//https://mail-stat.vercel.app/api/mail/open?LidGuid=123&LetterGuid=321
 
 app.get('/api/mail/open', async (req, res) => {
 
