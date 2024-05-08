@@ -38,6 +38,23 @@ app.get('/api/mail/open', async (req, res) => {
 
   })
 
+  app.get('/api/mail/unsubscribe', async (req, res) => {
+
+    /* ---- запись БД ---- */
+    const recordSet = new mailAction()
+    recordSet.action = 'unsubscribe'
+    recordSet.date = new Date()
+    recordSet.guidObg = req.query.LidGuid
+    recordSet.guidLetter = req.query.LetterGuid
+    recordSet.addInf = ''
+  
+    await recordSet.save()
+  
+    res.statusCode = 200
+    res.end('Выполнено отключение от рассылки')
+  
+    })  
+
 app.listen(port, () => {
-  //console.log(`Example app listening on port http://localhost:${port}`)
+  console.log(`Example app listening on port http://localhost:${port}`)
 })
