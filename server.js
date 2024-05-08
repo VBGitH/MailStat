@@ -13,11 +13,12 @@ const mailAction = mongoose.model('mailAction', {
   guidObject      : String,
   guidLetter      : String,
   addInf          : String,
-  isNew           : Boolean,
+  isSync          : Boolean,
   dateSync        : Date, 
 })
 
 app.use('/', express.static('public'))
+app.use(express.json())
 
 //http://localhost:3030/api/mail/open?LidGuid=123&LetterGuid=321
 //https://mail-stat.vercel.app/api/mail/open?LidGuid=123&LetterGuid=321
@@ -31,13 +32,12 @@ app.get('/api/mail/open', async (req, res) => {
   recordSet.guidObject = req.query.LidGuid
   recordSet.guidLetter = req.query.LetterGuid
   recordSet.addInf = ''
-  recordSet.isNew = true
+  recordSet.isSync = false
   recordSet.dateSync = new Date(1,1,1)
 
   await recordSet.save()
 
   /* ---- возвращаем картинку ---- */
-  res.statusCode = 200
   res.sendFile(pathPoint)
 
 })
@@ -53,17 +53,15 @@ app.get('/api/mail/unsubscribe', async (req, res) => {
   recordSet.guidObject = req.query.LidGuid
   recordSet.guidLetter = req.query.LetterGuid
   recordSet.addInf = ''
-  recordSet.isNew = true
+  recordSet.isSync = false
   recordSet.dateSync = new Date(1,1,1)
 
   await recordSet.save()
-
-  res.statusCode = 200
   res.end('Выполнено отключение от рассылки')
 
 })
 
-//синхронизация с УНФ (пароль передаем в запросе для чтения)
+//синхронизация с УНФ: чтение новых данных (пароль передаем в запросе для чтения)
 //https://mail-stat.vercel.app/api/getupdates/?pass=adter7re54556njfdhgfdgg8756546
 app.get('/api/getupdates', async (req, res) => {
 
@@ -71,15 +69,38 @@ app.get('/api/getupdates', async (req, res) => {
 
       /* ---- запрос к БД ---- */
       let rec = await mailAction.find({ 
-        isNew: true 
+        isSync: false 
       }).exec()
-      
-      res.json(rec)
+
+      //res.json(rec)
+      res.status(200).json(rec)
     }else{
-      res.end('denide')
+      res.status(500).send({error: 'error authentication'})
     }
 
-})    
+})
+
+//синхронизация с УНФ: отметка о загрузке записи (пароль передаем в заголовке post запроса)
+app.post('/api/setupdates', async (req, res) => {
+
+  let query = req.body
+  
+  if(query.pass == process.env.PASSWORD_READ){
+
+      let rowCount = Object.keys(query.records).length
+    
+      for (let i = 0; i < rowCount; i++ ){
+        cerRec = query.records[i].id
+        
+      }
+      
+      res.status(200).send()  
+
+    }else{
+      res.status(500).send({error: 'error authentication'})
+    }
+
+})
 
 app.listen(port, () => {
   console.log(`Example app listening on port http://localhost:${port}`)
