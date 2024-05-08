@@ -9,10 +9,12 @@ const mongoose = require('mongoose')
 mongoose.connect(process.env.MONGODB_URI)
 const mailAction = mongoose.model('mailAction', { 
   action          : String,
-  date            : Date,
-  guidObg         : String,
+  dateAction      : Date,
+  guidObject      : String,
   guidLetter      : String,
-  addInf          : String, 
+  addInf          : String,
+  isNew           : Boolean,
+  dateSync        : Date, 
 })
 
 app.use('/', express.static('public'))
@@ -25,10 +27,12 @@ app.get('/api/mail/open', async (req, res) => {
   /* ---- запись БД ---- */
   const recordSet = new mailAction()
   recordSet.action = 'readMail'
-  recordSet.date = new Date()
-  recordSet.guidObg = req.query.LidGuid
+  recordSet.dateAction = new Date()
+  recordSet.guidObject = req.query.LidGuid
   recordSet.guidLetter = req.query.LetterGuid
   recordSet.addInf = ''
+  recordSet.isNew = true
+  recordSet.dateSync = new Date(1,1,1)
 
   await recordSet.save()
 
@@ -45,10 +49,12 @@ app.get('/api/mail/unsubscribe', async (req, res) => {
   /* ---- запись БД ---- */
   const recordSet = new mailAction()
   recordSet.action = 'unsubscribe'
-  recordSet.date = new Date()
-  recordSet.guidObg = req.query.LidGuid
+  recordSet.dateAction = new Date()
+  recordSet.guidObject = req.query.LidGuid
   recordSet.guidLetter = req.query.LetterGuid
   recordSet.addInf = ''
+  recordSet.isNew = true
+  recordSet.dateSync = new Date(1,1,1)
 
   await recordSet.save()
 
@@ -62,7 +68,13 @@ app.get('/api/mail/unsubscribe', async (req, res) => {
 app.get('/api/getupdates', async (req, res) => {
 
   if(req.query.pass == process.env.PASSWORD_READ){
-      res.end('success')
+
+      /* ---- запрос к БД ---- */
+      let rec = await mailAction.find({ 
+        isNew: true 
+      }).exec()
+      
+      res.json(rec)
     }else{
       res.end('denide')
     }
