@@ -24,7 +24,7 @@ app.use('/', express.static('public'))
 app.use(express.json())
 
 //http://localhost:3030/api/mail/open?LidGuid=123&LetterGuid=321
-//https://mail-stat.vercel.app/api/mail/open?LidGuid=123&LetterGuid=321
+//https://mail-stat.vercel.app/api/mail/open?LidGuid=123&LetterGuid=321&AddInf=xxxxx
 //событие открытия письма
 app.get('/api/mail/open', async (req, res) => {
 
@@ -34,7 +34,7 @@ app.get('/api/mail/open', async (req, res) => {
   recordSet.dateAction = new Date()
   recordSet.guidObject = req.query.LidGuid
   recordSet.guidLetter = req.query.LetterGuid
-  recordSet.addInf = ''
+  recordSet.addInf = req.query.AddInf
   recordSet.isSync = false
   recordSet.dateSync = new Date(1,1,1)
 
@@ -45,7 +45,7 @@ app.get('/api/mail/open', async (req, res) => {
 
 })
 
-//https://mail-stat.vercel.app/api/mail/unsubscribe?LidGuid=123&LetterGuid=321
+//https://mail-stat.vercel.app/api/mail/unsubscribe?LidGuid=123&LetterGuid=321&AddInf=chain_456
 //событие отписки от рассылки
 app.get('/api/mail/unsubscribe', async (req, res) => {
 
@@ -55,7 +55,7 @@ app.get('/api/mail/unsubscribe', async (req, res) => {
   recordSet.dateAction = new Date()
   recordSet.guidObject = req.query.LidGuid
   recordSet.guidLetter = req.query.LetterGuid
-  recordSet.addInf = ''
+  recordSet.addInf = req.query.AddInf
   recordSet.isSync = false
   recordSet.dateSync = new Date(1,1,1)
 
@@ -105,6 +105,25 @@ app.post('/api/setupdates', async (req, res) => {
       
       res.status(200).send()  
 
+    }else{
+      res.status(500).send({error: 'error authentication'})
+    }
+
+})
+
+//для тестов, синхронизация с УНФ: чтение данных по ИД
+//https://mail-stat.vercel.app/api/getbyid/?pass=adter7re54556njfdhgfdgg8756546&LetterGuid=321
+app.get('/api/getbyid', async (req, res) => {
+
+  if(req.query.pass == process.env.PASSWORD_READ){
+
+      /* ---- запрос к БД ---- */
+      let rec = await mailAction.find({ 
+        guidLetter: req.query.LetterGuid 
+      }).exec()
+
+      //res.json(rec)
+      res.status(200).json(rec)
     }else{
       res.status(500).send({error: 'error authentication'})
     }
